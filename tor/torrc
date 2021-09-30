@@ -1,0 +1,52 @@
+RunAsDaemon 1
+
+#cfg
+#Tor2webMode 1
+
+#web site
+HiddenServiceDir /var/lib/tor/hidden_service/
+HiddenServicePort 80 127.0.0.1:80
+
+
+#Место проживание
+EntryNodes {de},{nl}
+ExitNodes {nl},{de}
+ExcludeNodes {be},{pl},{ca},{za},{vn},{uz},{ua},{tw},{tr},{th},{sk},{sg},{se},{sd},{sa},{ru},{ro},{pt},{ph},{pa},{nz},{np},{no},{my},{mx},{md},{lv},{lu},{kr},{jp},{it},{ir},{il},{ie},{id},{hr},{hk},{gr},{gi},{gb},{fi},{es},{ee},{dk},{cz},{cy},{cr},{co},{cn},{cl},{ci},{ch},{by},{br},{bg},{au},{at},{ar},{aq},{ao},{ae},{fr},{us}
+ExcludeExitNodes {be},{pl},{ca},{za},{vn},{uz},{ua},{tw},{tr},{th},{sk},{sg},{se},{sd},{sa},{ru},{ro},{pt},{ph},{pa},{nz},{np},{no},{my},{mx},{md},{lv},{lu},{kr},{jp},{it},{ir},{il},{ie},{id},{hr},{hk},{gr},{gi},{gb},{fi},{es},{ee},{dk},{cz},{cy},{cr},{co},{cn},{cl},{ci},{ch},{by},{br},{bg},{au},{at},{ar},{aq},{ao},{ae},{fr},{us}
+GeoIPFile /etc/tor/geoip
+GeoIPv6File /etc/tor/geoip6
+
+#Лог сервисов
+HiddenServiceStatistics 0
+
+#cfg
+ControlPort 9051
+StrictExitNodes 1
+StrictNodes 1
+AutomapHostsSuffixes .onion,.exit
+AutomapHostsOnResolve 1
+TransPort 9040 IsolateClientAddr IsolateSOCKSAuth IsolateClientProtocol IsolateDestPort IsolateDestAddr
+ExitPolicy accept *:53        # DNS
+ExitPolicy accept *:80-81     # HTTP 
+ExitPolicy accept *:443       # HTTPS
+ExitPolicy reject *:*
+SocksPort 9050 IsolateClientAddr IsolateSOCKSAuth IsolateClientProtocol IsolateDestPort IsolateDestAddr
+SOCKSPolicy accept *:53        # DNS
+SOCKSPolicy accept *:80-81     # HTTP 
+SOCKSPolicy accept *:443       # HTTPS
+SOCKSPolicy reject *:*
+
+### Производительность ###
+AvoidDiskWrites 1
+HardwareAccel 1
+NumCPUs 2
+CircuitBuildTimeout 5
+KeepalivePeriod 60
+NewCircuitPeriod 40
+NumEntryGuards 8
+MaxCircuitDirtiness 600
+MaxClientCircuitsPending 48
+UseEntryGuards 1
+EnforceDistinctSubnets 1
+ClientRejectInternalAddresses 1
+
