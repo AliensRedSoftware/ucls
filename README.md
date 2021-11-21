@@ -7,7 +7,7 @@ ubuntu clear list - очистка системы от мусора + очист
 + <b>ukernel</b> - очистка ядра от мусора
 
 ## Поддержка
-+ ([elementary os](https://elementary.io))
++ [elementary os](https://elementary.io)
 
 ## cls - Полная очистка от мусора
 1. <code>git clone https://github.com/AliensRedSoftware/ucls.git</code>
