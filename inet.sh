@@ -571,5 +571,5 @@ sudo iptables -t raw -P OUTPUT DROP
 #filter
 sudo iptables -t filter -P INPUT DROP
 sudo iptables -t filter -P FORWARD DROP
-sudo iptables -t filter -P OUTPUT ACCEPT
+sudo iptables -t filter -P OUTPUT DROP
 
