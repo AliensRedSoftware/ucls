@@ -274,4 +274,4 @@ sudo sh -c "echo 'ja_JP.UTF-8 UTF-8' >> /etc/locale.gen"
 sudo locale-gen
 echo "[Очистка локали] => Успешно :)"
 #----------------------------------
-echo "success ;)"<
+echo "success ;)"
