@@ -18,7 +18,7 @@ SMODULES=$(ls -u /lib/modules | head -n1 | sed "s/-$TYPE//g")
 echo $SMODULES
 for iv in `ls /boot/`
 do
-    if [[ "config-$SMODULES-$TYPE" != $iv && "initrd.img-$SMODULES-$TYPE" != $iv && "System.map-$SMODULES-$TYPE" != $iv && "vmlinuz-$SMODULES-$TYPE" != $iv && $iv != "grub" ]]
+    if [[ "config-$SMODULES-$TYPE" != $iv && "initrd.img-$SMODULES-$TYPE" != $iv && "System.map-$SMODULES-$TYPE" != $iv && "vmlinuz-$SMODULES-$TYPE" != $iv && $iv != "grub" && $iv != "initrd.img" && $iv != "vmlinuz" ]]
     then
         sudo rm -Rf /boot/$iv*
         echo "Clear => $iv"

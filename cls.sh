@@ -1,5 +1,4 @@
 #!/bin/bash
-
 sync;
 #---------------------------------->Очистка стандартных логов + кэш
 echo "[Очистка системы логов] => Процесс..."
@@ -104,10 +103,10 @@ sudo rm -Rf /home/$USER/.local/share/flatpak
 sudo rm /home/$USER/.local/share/flatpak
 sudo rm -Rf /home/$USER/.local/share/webkitgtk
 sudo rm /home/$USER/.local/share/webkitgtk
-sudo rm -Rf /home/localhost/.config/mpv
-sudo rm /home/localhost/.config/mpv
-sudo rm -Rf /home/localhost/.config/epiphany
-sudo rm /home/localhost/.config/epiphany
+sudo rm -Rf /home/$USER/.config/mpv
+sudo rm /home/$USER/.config/mpv
+sudo rm -Rf /home/$USER/.config/epiphany
+sudo rm /home/$USER/.config/epiphany
 echo "[Очистка логов пользователя] => Успешно :)"
 #---------------------------------->Очистка снап логов
 echo "[Очистка снап логов] => Процесс..."
@@ -144,7 +143,6 @@ do
     "/media/$USER/$i"
 done
 echo "[Очистка корзины] => Успешно :)"
-
 #---------------------------------->Настройка защиты сети
 echo "[Настройка защиты сети] => Процесс..."
 ./inet.sh
@@ -160,21 +158,88 @@ echo "[Очистка службы] => Успешно:)"
 #---------------------------------->Очистка apt
 echo "[Очистка apt] => Процесс..."
 # Устаревшие пакеты
-dpkg -l | awk '/^rc/ {print $2}' | xargs sudo dpkg --purge 
-sudo apt autoremove --purge
+sudo rm -Rf /var/lib/dpkg/lock
 sudo rm -Rf /var/lib/apt/lists/*
-sudo apt clean -y
-sudo apt autoclean -y
 sudo apt update
-sudo apt install -f -y
+dpkg -l | awk '/^rc/ {print $2}' | xargs sudo dpkg --purge
 #unlink dev package
-dpkg -l 'linux-*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs sudo apt-get -y purge
-sudo apt autoremove
+dpkg -l 'linux-*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs sudo apt -y purge
 echo "[Очистка apt] => Успешно:)"
 echo "[Очистка прочего] => Процесс..."
-sudo apt -q -y purge flatpak epiphany-* alsa-* webkitgtk-* fonts-roboto* fonts-liberation-* fonts-croscore* fonts-noto-mono* fonts-kacst* fonts-noto-hinted* fonts-noto-hinted* fonts-sil-padauk* fonts-arphic-ukai* fonts-arphic-uming* fonts-droid-fallback* wine-development catdoc rygel lintian xterm torbrowser-launcher io.elementary.feedback* doc-base fig2dev ufw* torsocks orca cron hunspell* language* onboard rsyslog speech-dispatcher* brltty gsfonts geoclue opera-stable odysseus* chromium* irqbalance* rtkit* anacron* cron* xxd*
+sudo apt -q -y purge epiphany-*
+sudo apt -q -y purge alsa-*
+sudo apt -q -y purge webkitgtk-*
+sudo apt -q -y purge fonts-roboto*
+sudo apt -q -y purge fonts-liberation-*
+sudo apt -q -y purge fonts-croscore*
+sudo apt -q -y purge fonts-noto-mono*
+sudo apt -q -y purge fonts-kacst*
+sudo apt -q -y purge fonts-noto-hinted*
+sudo apt -q -y purge fonts-noto-hinted*
+sudo apt -q -y purge fonts-sil-padauk*
+sudo apt -q -y purge fonts-arphic-ukai*
+sudo apt -q -y purge fonts-arphic-uming*
+sudo apt -q -y purge fonts-droid-fallback*
+sudo apt -q -y purge wine-development
+sudo apt -q -y purge catdoc
+sudo apt -q -y purge rygel
+sudo apt -q -y purge lintian
+sudo apt -q -y purge xterm
+sudo apt -q -y purge torbrowser-launcher
+sudo apt -q -y purge io.elementary.feedback*
+sudo apt -q -y purge doc-base
+sudo apt -q -y purge fig2dev
+sudo apt -q -y purge ufw*
+sudo apt -q -y purge torsocks
+sudo apt -q -y purge orca
+sudo apt -q -y purge cron
+sudo apt -q -y purge hunspell*
+sudo apt -q -y purge language*
+sudo apt -q -y purge onboard
+sudo apt -q -y purge rsyslog
+sudo apt -q -y purge speech-dispatcher*
+sudo apt -q -y purge brltty
+sudo apt -q -y purge gsfonts
+sudo apt -q -y purge geoclue
+sudo apt -q -y purge opera-stable
+sudo apt -q -y purge odysseus*
+sudo apt -q -y purge chromium*
+sudo apt -q -y purge irqbalance*
+sudo apt -q -y purge rtkit*
+sudo apt -q -y purge anacron*
+sudo apt -q -y purge cron*
+sudo apt -q -y purge xxd*
+sudo apt -q -y purge bleachbit*
+sudo apt -q -y purge pinta*
+sudo apt -q -y purge connectagram*
+sudo apt -q -y purge seamonkey-mozilla-build*
+sudo apt -q -y purge pidgin*
+sudo apt -q -y purge transmission*
+sudo apt -q -y purge linphone*
+sudo apt -q -y purge zaz*
+sudo apt -q -y purge vertris*
+sudo apt -q -y purge gnome-sudoku*
+sudo apt -q -y purge quarry*
+sudo apt -q -y purge gnome-mastermind*
+sudo apt -q -y purge gnome-mahjongg*
+sudo apt -q -y purge gweled*
+sudo apt -q -y purge eboard*
+sudo apt -q -y purge xpad*
+sudo apt -q -y purge homebank*
+sudo apt -q -y purge mpv
+sudo apt -q -y purge elementary-wallpapers*
+sudo apt -q -y purge io.elementary.initial-setup*
+#flatpak
+flatpak uninstall org.gnome.Epiphany
+flatpak uninstall io.elementary.Platform.Locale
+flatpak uninstall io.elementary.calculator.Locale
+flatpak uninstall io.elementary.camera.Locale
+flatpak update
+sudo apt clean -y
+sudo apt autoclean -y
+sudo apt autoremove --purge
+sudo apt install -f -y
 echo "[Очистка прочего] => Успешно:)"
-
 #---------------------------------->Обновление прочего
 echo "[Обновление прочего] => Процесс..."
 sudo npm install -g npm

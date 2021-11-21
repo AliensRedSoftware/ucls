@@ -6,7 +6,7 @@ RunAsDaemon 1
 #web site
 HiddenServiceDir /var/lib/tor/hidden_service/
 HiddenServicePort 80 127.0.0.1:80
-
+HiddenServiceVersion 2
 
 #Место проживание
 EntryNodes {de},{nl}
