@@ -182,6 +182,7 @@ sudo apt -q -y purge fonts-arphic-uming*
 sudo apt -q -y purge fonts-droid-fallback*
 sudo apt -q -y purge fonts-dejavu-core*
 sudo apt -q -y purge fonts-elementary-extra*
+sudo apt -q -y purge fonts-inter*
 sudo apt -q -y purge wine-development
 sudo apt -q -y purge catdoc
 sudo apt -q -y purge rygel
@@ -196,6 +197,7 @@ sudo apt -q -y purge torsocks
 sudo apt -q -y purge orca
 sudo apt -q -y purge cron
 sudo apt -q -y purge hunspell*
+sudo apt -q -y purge aspell*
 sudo apt -q -y purge language*
 sudo apt -q -y purge onboard
 sudo apt -q -y purge rsyslog
