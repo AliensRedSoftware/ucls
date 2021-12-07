@@ -3,6 +3,10 @@ readonly stubby=true
 #privoxy - change HTTP request
 readonly privoxy=true
 readonly tor=true
+
+# package
+sudo apt install irqbalance
+sudo apt install ethtool
 #---------------------------------->Очистка сети
 echo "[Очистка сети] => Процесс..."
 sudo modprobe br_netfilter
@@ -101,7 +105,7 @@ sudo sysctl -w net.core.rmem_max=16777216
 sudo sysctl -w net.core.wmem_max=16777216
 
 # Increase number of incoming connections backlog
-sudo sysctl -w net.core.netdev_max_backlog=250000
+sudo sysctl -w net.core.netdev_max_backlog=300000
 sudo sysctl -w net.core.dev_weight=64
 
 # Increase number of incoming connections
@@ -152,7 +156,7 @@ sudo sysctl -w net.ipv4.neigh.default.unres_qlen=6
 sudo sysctl -w net.ipv4.tcp_reordering=3
 
 # How many times to retry killing an alive TCP connection
-sudo sysctl -w net.ipv4.tcp_retries2=15
+sudo sysctl -w net.ipv4.tcp_retries2=6
 sudo sysctl -w net.ipv4.tcp_retries1=3
 
 # Avoid falling back to slow start after a connection goes idle
@@ -169,6 +173,10 @@ sudo sysctl -w net.ipv6.route.flush=1
 
 # TCP SYN cookie protection
 sudo sysctl -w net.ipv4.tcp_syncookies=1
+
+# IP Fragmentation
+sudo sysctl -w net.ipv4.ipfrag_low_thresh=393216
+sudo sysctl -w net.ipv4.ipfrag_high_thresh=544288
 
 # TCP rfc1337
 sudo sysctl -w net.ipv4.tcp_rfc1337=1
@@ -195,7 +203,8 @@ sudo sysctl -w fs.aio-max-nr=18446744073709551615
 # Miscellaneous tweaks
 sudo sysctl -w net.ipv4.ip_local_port_range="1024 65535"
 sudo sysctl -w net.ipv4.tcp_workaround_signed_windows=1
-sudo sysctl -w net.ipv4.tcp_fack=1
+sudo sysctl -w net.ipv4.tcp_dsack=0
+sudo sysctl -w net.ipv4.tcp_fack=0
 sudo sysctl -w net.ipv4.tcp_low_latency=1
 sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_frto=2
@@ -203,7 +212,6 @@ sudo sysctl -w net.ipv4.tcp_frto_response=2
 sudo sysctl -w net.netfilter.nf_conntrack_tcp_timeout_time_wait=30
 
 # options
-sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.conf.default.log_martians=1
 sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 sudo sysctl -w net.ipv4.tcp_available_congestion_control=bbr
@@ -211,7 +219,11 @@ sudo sysctl -w net.core.default_qdisc=fq
 sudo sysctl -w net.ipv4.tcp_keepalive_probes=5
 sudo sysctl -w net.ipv4.route.flush=1
 sudo sysctl -w net.nf_conntrack_max=1000000
-sudo sysctl -w net.ipv4.tcp_tw_recycle=0
+sudo sysctl -w net.ipv4.tcp_tw_recycle=1
+sudo sysctl -w net.core.netdev_tstamp_prequeue=0
+sudo sysctl -w net.core.dev_weight=600
+sudo sysctl -w net.ipv4.ip_early_demux=0
+sudo sysctl -w net.ipv4.tcp_dma_copybreak=2048
 
 # kernel
 sudo sysctl -w kernel.sem="350358400641024"
@@ -224,6 +236,23 @@ sudo sysctl -w kernel.sysrq=0
 
 # netfilter
 sudo sysctl -w net.netfilter.nf_conntrack_max=524288
+
+# flow limit
+sudo sysctl -w net.core.flow_limit_cpu_bitmap=00d
+sudo sysctl -w net.core.flow_limit_table_len=8192
+
+# Enable kptr_restrict
+sudo sysctl -w kernel.kptr_restrict=1
+
+# IRQ
+sudo sh -c "echo '1' > /proc/irq/8/smp_affinity"
+
+# optimizing java applications
+sudo sysctl -w kernel.sched_compat_yield=1
+sudo sysctl -w kernel.sched_child_runs_first=1
+
+# Tuning: Enabling RFS
+sudo sysctl -w net.core.rps_sock_flow_entries=32768
 
 #Apply effect...
 sysctl=$(sudo sysctl -a)
@@ -333,16 +362,24 @@ done
 sudo sh -c "echo '#sport' >> rule"
 for i in `ls ./inet/filter/sport`
 do
+	#sport
 	sudo sh -c "echo '-A INPUT -p udp --sport $i -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A INPUT -p tcp --sport $i -j ACCEPT' >> rule"
+	#dport
+	sudo sh -c "echo '-A OUTPUT -p udp --sport $i -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A OUTPUT -p tcp --sport $i -j ACCEPT' >> rule"
 done
 
 #DPORT ACCESS
 sudo sh -c "echo '#dport' >> rule"
 for i in `ls ./inet/filter/dport`
 do
+	#sport
 	sudo sh -c "echo '-A INPUT -p udp --dport $i -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A INPUT -p tcp --dport $i -j ACCEPT' >> rule"
+	#dport
+	sudo sh -c "echo '-A OUTPUT -p udp --dport $i -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A OUTPUT -p tcp --dport $i -j ACCEPT' >> rule"
 done
 
 sudo sh -c "echo 'COMMIT' >> rule"
@@ -509,6 +546,7 @@ done
 sudo sh -c "echo '#sport' >> rule"
 for port in `ls ./inet/nat/sport`
 do
+	#dport
 	sudo sh -c "echo '-A PREROUTING -p udp --dport $port -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A PREROUTING -p tcp --dport $port -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A INPUT -p udp --dport $port -j ACCEPT' >> rule"
@@ -517,6 +555,15 @@ do
 	sudo sh -c "echo '-A OUTPUT -p tcp --dport $port -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A POSTROUTING -p udp --dport $port -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A POSTROUTING -p tcp --dport $port -j ACCEPT' >> rule"
+	#sport
+	sudo sh -c "echo '-A PREROUTING -p udp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A PREROUTING -p tcp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A INPUT -p udp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A INPUT -p tcp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A OUTPUT -p udp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A OUTPUT -p tcp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A POSTROUTING -p udp --sport $port -j ACCEPT' >> rule"
+	sudo sh -c "echo '-A POSTROUTING -p tcp --sport $port -j ACCEPT' >> rule"
 done
 
 #DPORT ACCESS

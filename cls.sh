@@ -208,7 +208,6 @@ sudo apt -q -y purge geoclue
 sudo apt -q -y purge opera-stable
 sudo apt -q -y purge odysseus*
 sudo apt -q -y purge chromium*
-sudo apt -q -y purge irqbalance*
 sudo apt -q -y purge rtkit*
 sudo apt -q -y purge anacron*
 sudo apt -q -y purge cron*
