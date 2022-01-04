@@ -434,10 +434,10 @@ then
 		fi
 	}
 	# Tor TransPort
-	readonly tor_transport=9040
+	readonly tor_transport=9140
 
 	# Tor DNSPort
-	readonly tor_dnsport=9053
+	readonly tor_dnsport=9153
 
 	# Tor VirtualAddrNetworkIPv4
 	readonly tor_virtualAddress='10.192.0.0/10'
@@ -477,7 +477,7 @@ then
 	#cfg
 	sudo cp ./tor/torrc /etc/tor/torrc
 	# Возвращение ресстарта тора (Служба)
-	rt
+	#rt
 fi
 
 #optimize DNS
