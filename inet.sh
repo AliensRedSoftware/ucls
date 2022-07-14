@@ -1,12 +1,20 @@
-#stubby - crypto DNS traffic
+#!/bin/bash
+
+# stubby - crypto DNS traffic
 readonly stubby=true
-#privoxy - change HTTP request
-readonly privoxy=true
+
+# privoxy - change HTTP request
+readonly privoxy=false
+
+# tor - change HTTP request
 readonly tor=true
 
 # package
 sudo apt install irqbalance
 sudo apt install ethtool
+sudo apt install numactl
+sudo apt install tuned
+
 #---------------------------------->Очистка сети
 echo "[Очистка сети] => Процесс..."
 sudo modprobe br_netfilter
@@ -16,7 +24,7 @@ sudo modprobe ip_conntrack
 sudo modprobe ip_conntrack_ftp
 sudo modprobe ip_nat_ftp
 
-# wipe
+# wipe network
 sudo sh -c "echo '1024' > /proc/sys/vm/min_free_kbytes"
 sudo sh -c "echo '1' > /proc/sys/vm/oom_kill_allocating_task"
 sudo sh -c "echo '1' > /proc/sys/vm/overcommit_memory"
@@ -32,6 +40,10 @@ sudo sh -c "echo '1' > /proc/sys/net/ipv4/tcp_timestamps"
 sudo sh -c "echo '1' > /proc/sys/net/ipv4/tcp_dsack"
 sudo sh -c "echo '5' > /proc/sys/net/ipv4/tcp_keepalive_intvl"
 sudo sh -c "echo '30' > /proc/sys/net/ipv4/tcp_keepalive_time"
+sudo sh -c "echo '524288' > /sys/module/nf_conntrack/parameters/hashsize"
+
+# numa balance (memory)
+sudo sysctl -w kernel.numa_balancing=1
 
 # Ignore all (incoming + outgoing) ICMP ECHO requests (i.e. disable PING).
 # Usually not a good idea, as some protocols and users need/want this.
@@ -39,10 +51,12 @@ sudo sh -c "echo '0' > /proc/sys/net/ipv4/icmp_echo_ignore_all"
 
 # Disable bootp_relay. Should not be needed, usually.
 sudo sh -c "echo '0' > /proc/sys/net/ipv4/conf/all/bootp_relay"
+
 sudo sysctl -w net.core.netdev_budget=600
 sudo sysctl -w net.ipv4.conf.all.route_localnet=1
 sudo sysctl -w net.ipv4.conf.all.proxy_arp=1
 sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
 
 #Network Security
 
@@ -109,10 +123,10 @@ sudo sysctl -w net.core.netdev_max_backlog=300000
 sudo sysctl -w net.core.dev_weight=64
 
 # Increase number of incoming connections
-sudo sysctl -w net.core.somaxconn=15000
+sudo sysctl -w net.core.somaxconn=32768
 
 # Increase the maximum amount of option memory buffers
-sudo sysctl -w net.core.optmem_max=65535
+sudo sysctl -w net.core.optmem_max=65536
 
 # Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks
 sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1440000
@@ -123,7 +137,7 @@ sudo sysctl -w net.ipv4.tcp_tw_reuse=1
 
 # Limit number of orphans, each orphan can eat up to 16M (max wmem)
 # of unswappable memory
-sudo sysctl -w net.ipv4.tcp_max_orphans=16384
+sudo sysctl -w net.ipv4.tcp_max_orphans=65536
 sudo sysctl -w net.ipv4.tcp_orphan_retries=0
 
 # don't cache ssthresh from previous connection
@@ -133,16 +147,31 @@ sudo sysctl -w net.ipv4.tcp_moderate_rcvbuf=1
 # Increase size of RPC datagram queue length
 sudo sysctl -w net.unix.max_dgram_qlen=50
 
-# Don't allow the arp table to become bigger than this
-sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=2048
+# gc_thresh
+#small ip4v
 
-# Tell the gc when to become aggressive with arp table cleaning.
-# Adjust this based on size of the LAN. 1024 is suitable for most
-# /24 networks
-sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=1024
+#sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=2048
+#sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=1024
+#sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=32
 
-# Adjust where the gc will leave arp table alone - set to 32.
-sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=32
+#small ip6v
+
+#sudo sysctl -w net.ipv6.neigh.default.gc_thresh3=2048
+#sudo sysctl -w net.ipv6.neigh.default.gc_thresh2=1024
+#sudo sysctl -w net.ipv6.neigh.default.gc_thresh1=32
+
+#small ip4v
+sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=24456
+sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=12228
+sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=8192
+
+#small ip6v
+sudo sysctl -w net.ipv6.neigh.default.gc_thresh3=24456
+sudo sysctl -w net.ipv6.neigh.default.gc_thresh2=12228
+sudo sysctl -w net.ipv6.neigh.default.gc_thresh1=8192
+
+sudo sysctl -w net.ipv4.neigh.default.base_reachable_time_ms=30000
+sudo sysctl -w net.ipv4.neigh.default.gc_stale_time=60
 
 # Adjust to arp table gc to clean-up more often
 sudo sysctl -w net.ipv4.neigh.default.gc_interval=30
@@ -179,7 +208,7 @@ sudo sysctl -w net.ipv4.ipfrag_low_thresh=393216
 sudo sysctl -w net.ipv4.ipfrag_high_thresh=544288
 
 # TCP rfc1337
-sudo sysctl -w net.ipv4.tcp_rfc1337=1
+sudo sysctl -w net.ipv4.tcp_rfc1337=0
 
 # TCP SACK
 sudo sysctl -w net.ipv4.tcp_sack=0
@@ -210,20 +239,21 @@ sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_frto=2
 sudo sysctl -w net.ipv4.tcp_frto_response=2
 sudo sysctl -w net.netfilter.nf_conntrack_tcp_timeout_time_wait=30
+sudo sysctl -w net.netfilter.nf_conntrack_tcp_timeout_established=1800
 
-# options
+# options (other)
 sudo sysctl -w net.ipv4.conf.default.log_martians=1
 sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 sudo sysctl -w net.ipv4.tcp_available_congestion_control=bbr
-sudo sysctl -w net.core.default_qdisc=fq
-sudo sysctl -w net.ipv4.tcp_keepalive_probes=5
-sudo sysctl -w net.ipv4.route.flush=1
-sudo sysctl -w net.nf_conntrack_max=1000000
-sudo sysctl -w net.ipv4.tcp_tw_recycle=1
-sudo sysctl -w net.core.netdev_tstamp_prequeue=0
-sudo sysctl -w net.core.dev_weight=600
 sudo sysctl -w net.ipv4.ip_early_demux=0
 sudo sysctl -w net.ipv4.tcp_dma_copybreak=2048
+sudo sysctl -w net.ipv4.tcp_keepalive_probes=5
+sudo sysctl -w net.ipv4.route.flush=1
+sudo sysctl -w net.ipv4.tcp_tw_recycle=1
+sudo sysctl -w net.core.default_qdisc=fq
+sudo sysctl -w net.core.netdev_tstamp_prequeue=0
+sudo sysctl -w net.ipv4.route.redirect_silence=20480 
+sudo sysctl -w net.ipv4.route.redirect_load=20
 
 # kernel
 sudo sysctl -w kernel.sem="350358400641024"
@@ -233,9 +263,16 @@ sudo sysctl -w kernel.msgmnb=65536
 sudo sysctl -w kernel.msgmax=65536
 sudo sysctl -w kernel.core_uses_pid=1
 sudo sysctl -w kernel.sysrq=0
+sudo sysctl -w kernel.threads-max=139264
 
 # netfilter
-sudo sysctl -w net.netfilter.nf_conntrack_max=524288
+sudo sysctl -w net.nf_conntrack_max=4194304
+sudo sysctl -w net.netfilter.nf_conntrack_generic_timeout=60
+sudo sysctl -w net.netfilter.nf_conntrack_icmp_timeout=10
+sudo sysctl -w net.netfilter.nf_conntrack_tcp_timeout_syn_recv=30
+sudo sysctl -w net.netfilter.nf_conntrack_tcp_timeout_syn_sent=60
+sudo sysctl -w net.netfilter.nf_conntrack_udp_timeout_stream=60
+sudo sysctl -w net.netfilter.nf_conntrack_max=4194304
 
 # flow limit
 sudo sysctl -w net.core.flow_limit_cpu_bitmap=00d
@@ -302,6 +339,7 @@ do
 	sudo sh -c "echo '-A OUTPUT -s 127.0.0.1 -p udp --sport $i -j ACCEPT' >> rule"
 	sudo sh -c "echo '-A OUTPUT -s 127.0.0.1 -p tcp --sport $i -j ACCEPT' >> rule"
 done
+
 for i in `grep "nameserver" /etc/resolv.conf | cut -d' ' -f2`
 do
 	for port in `ls ./inet/filter/sport`
@@ -318,17 +356,20 @@ done
 #hostname
 for i in `hostname -I`
 do
-	for port in `ls ./inet/filter/sport`
-	do
-		#INPUT PORT
-		sudo sh -c "echo '-A INPUT -s $i -p udp --sport $port -j ACCEPT' >> rule"
-		sudo sh -c "echo '-A INPUT -s $i -p tcp --sport $port -j ACCEPT' >> rule"
-		#OUTPUT PORT
-		sudo sh -c "echo '-A OUTPUT -s $i -p udp --sport $port -j ACCEPT' >> rule"
-		sudo sh -c "echo '-A OUTPUT -s $i -p tcp --sport $port -j ACCEPT' >> rule"
-		sudo sh -c "echo '-A OUTPUT -s $i -p udp --dport $port -j ACCEPT' >> rule"
-		sudo sh -c "echo '-A OUTPUT -s $i -p tcp --dport $port -j ACCEPT' >> rule"
-	done
+    # check IPv4 syntax
+    if [[ "$i" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+		for port in `ls ./inet/filter/sport`
+		do
+			#INPUT PORT
+			sudo sh -c "echo '-A INPUT -s $i -p udp --sport $port -j ACCEPT' >> rule"
+			sudo sh -c "echo '-A INPUT -s $i -p tcp --sport $port -j ACCEPT' >> rule"
+			#OUTPUT PORT
+			sudo sh -c "echo '-A OUTPUT -s $i -p udp --sport $port -j ACCEPT' >> rule"
+			sudo sh -c "echo '-A OUTPUT -s $i -p tcp --sport $port -j ACCEPT' >> rule"
+			sudo sh -c "echo '-A OUTPUT -s $i -p udp --dport $port -j ACCEPT' >> rule"
+			sudo sh -c "echo '-A OUTPUT -s $i -p tcp --dport $port -j ACCEPT' >> rule"
+		done
+    fi
 done
 
 #ip ACCESS
@@ -389,7 +430,25 @@ sudo sh -c "echo ':INPUT DROP' >> rule"
 sudo sh -c "echo ':OUTPUT DROP' >> rule"
 sudo sh -c "echo ':POSTROUTING DROP' >> rule"
 
-gsettings set org.gnome.system.proxy mode 'none'
+# Перезагрузка панели прокси
+function resetProxyPanel() {
+	# HTTP
+	gsettings set org.gnome.system.proxy.http host ''
+	gsettings set org.gnome.system.proxy.http port 0
+	# HTTPS
+	gsettings set org.gnome.system.proxy.https host ''
+	gsettings set org.gnome.system.proxy.https port 0
+	# FTP
+	gsettings set org.gnome.system.proxy.ftp host ''
+	gsettings set org.gnome.system.proxy.ftp port 0
+	# SOCKS
+	gsettings set org.gnome.system.proxy.socks host ''
+	gsettings set org.gnome.system.proxy.socks port 0
+
+	gsettings set org.gnome.system.proxy mode 'none'
+}
+
+resetProxyPanel
 
 #DNS Crypt
 if [[ $stubby == true ]]
@@ -401,20 +460,6 @@ then
 	sudo cp ./stubby/stubby.yml /etc/stubby/stubby.yml
 	echo "[stubby] [CFG] => Done :)"
 	sudo systemctl restart stubby
-fi
-
-#privoxy modify headers (web site)...
-#HTTP 8118 PORT
-#HTTPS 8118 PORT
-if [[ $privoxy == true ]]
-then
-	sudo apt install privoxy
-	sudo systemctl enable privoxy
-	#cfg...	
-	echo "[privoxy] [CFG] => Process..."
-	sudo cp ./privoxy/privoxy /etc/privoxy/config
-	echo "[privoxy] [CFG] => Done :)"
-	sudo systemctl restart privoxy
 fi
 
 #tor router
@@ -462,13 +507,10 @@ then
 
 	#sudo sh -c "echo '-A OUTPUT -p tcp --sport 80:81 -j REDIRECT --to-ports 8123' >> rule"
 	#sudo sh -c "echo '-A OUTPUT -p tcp --sport 443 -j REDIRECT --to-ports 8123' >> rule"
+
 	#proxy
-	#gsettings set org.gnome.system.proxy.socks host '127.0.0.1'
-	#gsettings set org.gnome.system.proxy.socks port 9050
-	gsettings set org.gnome.system.proxy.https host '127.0.0.1'
-	gsettings set org.gnome.system.proxy.https port 8118
-	gsettings set org.gnome.system.proxy.http host '127.0.0.1'
-	gsettings set org.gnome.system.proxy.http port 8118
+	gsettings set org.gnome.system.proxy.socks host '127.0.0.1'
+	gsettings set org.gnome.system.proxy.socks port 9150
 	gsettings set org.gnome.system.proxy mode 'manual'
 
 	#other
@@ -478,6 +520,29 @@ then
 	sudo cp ./tor/torrc /etc/tor/torrc
 	# Возвращение ресстарта тора (Служба)
 	#rt
+fi
+
+#privoxy modify headers (web site)...
+#HTTP 8118 PORT
+#HTTPS 8118 PORT
+if [[ $privoxy == true ]]
+then
+	resetProxyPanel
+	sudo apt install privoxy
+	sudo systemctl enable privoxy
+	#cfg...	
+	
+	echo "[privoxy] [CFG] => Process..."
+	sudo cp ./privoxy/privoxy /etc/privoxy/config
+	echo "[privoxy] [CFG] => Done :)"
+	sudo systemctl restart privoxy
+	
+	#settings...
+	gsettings set org.gnome.system.proxy.https host '127.0.0.1'
+	gsettings set org.gnome.system.proxy.https port 8118
+	gsettings set org.gnome.system.proxy.http host '127.0.0.1'
+	gsettings set org.gnome.system.proxy.http port 8118
+	gsettings set org.gnome.system.proxy mode 'manual'
 fi
 
 #optimize DNS
@@ -608,14 +673,15 @@ done
 sudo sh -c "echo 'COMMIT' >> rule"
 sudo sh -c "echo '' >> rule"
 
+# Apply...
 echo 'rule успешно добавлен :)'
 sudo iptables-restore < rule
 
-#raw
+# raw
 sudo iptables -t raw -P PREROUTING DROP
 sudo iptables -t raw -P OUTPUT DROP
 
-#filter
+# filter
 sudo iptables -t filter -P INPUT DROP
 sudo iptables -t filter -P FORWARD DROP
 sudo iptables -t filter -P OUTPUT DROP

@@ -19,10 +19,16 @@ sudo rm -Rf /home/$USER/.nv
 sudo rm -Rf /home/$USER/.java
 sudo rm -Rf /home/$USER/.thumbnails/
 sudo rm -Rf /home/$USER/.oracle_jre_usage
+#Скриншот
 sudo rm -Rf /home/$USER/Изображения/Screenshots/*
 sudo rm -Rf /home/$USER/Изображения/Снимки\ экрана/*
-sudo rm -Rf /home/$USER/Загрузки/*
 sudo rm -Rf /home/$USER/Pictures/Screenshots/*
+sudo rm -Rf /home/$USER/Pictures/Снимки\ экрана/*
+sudo rm -Rf /home/$USER/Images/Снимки\ экрана/*
+sudo rm -Rf /home/$USER/Images/Screenshots/*
+#Download (загрузки файлов из инетов)
+sudo rm -Rf /home/$USER/Загрузки/*
+sudo rm -Rf /home/$USER/Downloads/*
 #Браузер
 sudo rm -Rf /home/$USER/.mozilla/*
 sudo rm /home/$USER/.mozilla
@@ -43,6 +49,10 @@ sudo rm -Rf /home/$USER/jd2/jre
 sudo rm /home/$USER/jd2/jre
 sudo rm -Rf /home/$USER/jd2/output.log
 sudo rm -Rf /home/$USER/jd2/error.log
+#skypeforlinux
+sudo rm -Rf /home/$USER/.config/skypeforlinux/Cache/*
+sudo rm /home/$USER/.config/skypeforlinux/Cache
+
 #gradle
 sudo rm -Rf /home/$USER/.gradle
 sudo rm /home/$USER/.gradle
@@ -60,7 +70,7 @@ sudo rm -Rf /root/.*
 #DevelNext
 sudo rm -Rf /home/$USER/.DevelNext/cache
 sudo rm -Rf /home/$USER/.DevelNext/log
-#Telegram
+#Telegram (legacy)
 sudo rm -Rf /home/$USER/.local/share/TelegramDesktop/log.txt
 sudo rm -Rf /home/$USER/.local/share/TelegramDesktop/tdata/user_data
 sudo rm -Rf /home/$USER/.local/share/TelegramDesktop/tdata/emoji
@@ -71,6 +81,11 @@ sudo rm /home/$USER/.local/share/TelegramDesktop/tupdates
 sudo rm -Rf /home/$USER/.config/discord/Cache
 sudo rm -Rf /home/$USER/.config/discord/VideoDecodeStats
 sudo rm -Rf /home/$USER/.config/discord/modules.log
+#Wire
+sudo rm -Rf /home/$USER/.config/Wire/Cache/*
+sudo rm /home/$USER/.config/Wire/Cache
+#Electron
+sudo rm -Rf /home/$USER/.config/electron/*
 #subl
 sudo rm -Rf /home/$USER/.config/sublime-text-3/Cache
 #compose-cache
@@ -121,6 +136,11 @@ echo "[Очистка снап логов] => Успешно :)"
 echo "[Очистка памяти] => Процесс..."
 sudo sysctl -w vm.drop_caches=4
 echo "[Очистка памяти] => Успешно :)"
+#---------------------------------->Очистка .var Cache
+for i in `ls /media/$USER/.var/app`
+do
+	sudo rm -Rf /media/$USER/.var/app/$i/cache/*
+done
 #---------------------------------->Очистка корзины
 echo "[Очистка корзины] => Процесс..."
 sudo rm -Rf /home/$USER/.local/share/Trash/files/*
@@ -133,20 +153,24 @@ sudo rm -Rf /home/$USER/.local/share/Trash/expunged/.*
 #Очистка всех корзин
 for i in `ls /media/$USER`
 do
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/files/*
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/info/*
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/expunged/*
-    #Очистка скрытых расширение
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/files/.*
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/info/.*
-    sudo rm -Rf /media/$USER/$i/.Trash-1000/expunged/.*
-    "/media/$USER/$i"
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/files/*
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/info/*
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/expunged/*
+	#Очистка скрытых расширение
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/files/.*
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/info/.*
+	sudo rm -Rf /media/$USER/$i/.Trash-1000/expunged/.*
 done
 echo "[Очистка корзины] => Успешно :)"
+
 #---------------------------------->Настройка защиты сети
 echo "[Настройка защиты сети] => Процесс..."
-./inet.sh
-echo "[Настройка защиты сети] => Успешно:)"
+if  [[ "$(read -e -p 'Вы точно хотите Очистить сеть ? [y/N] '; echo $REPLY)" == [Yy]* ]]
+then
+	./inet.sh
+	echo "[Настройка защиты сети] => Успешно:)"
+fi
+
 #---------------------------------->Очистка прочего
 echo "[Очистка службы] => Процесс..."
 sudo systemctl disable syslog
@@ -155,6 +179,7 @@ sudo systemctl disable rsyslog
 sudo systemctl disable upower
 sudo systemctl disable motd-news
 echo "[Очистка службы] => Успешно:)"
+
 #---------------------------------->Очистка apt
 echo "[Очистка apt] => Процесс..."
 # Устаревшие пакеты
@@ -162,77 +187,72 @@ sudo rm -Rf /var/lib/dpkg/lock
 sudo rm -Rf /var/lib/apt/lists/*
 sudo apt update
 dpkg -l | awk '/^rc/ {print $2}' | xargs sudo dpkg --purge
-#unlink dev package
+# unlink dev package
 dpkg -l 'linux-*' | sed '/^ii/!d;/'"$(uname -r | sed "s/\(.*\)-\([^0-9]\+\)/\1/")"'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | xargs sudo apt -y purge
 echo "[Очистка apt] => Успешно:)"
-echo "[Очистка прочего] => Процесс..."
-sudo apt -q -y purge epiphany-*
-sudo apt -q -y purge alsa-*
-sudo apt -q -y purge webkitgtk-*
-sudo apt -q -y purge fonts-roboto*
-sudo apt -q -y purge fonts-liberation-*
-sudo apt -q -y purge fonts-croscore*
-sudo apt -q -y purge fonts-noto-mono*
-sudo apt -q -y purge fonts-kacst*
-sudo apt -q -y purge fonts-noto-hinted*
-sudo apt -q -y purge fonts-noto-hinted*
-sudo apt -q -y purge fonts-sil-padauk*
-sudo apt -q -y purge fonts-arphic-ukai*
-sudo apt -q -y purge fonts-arphic-uming*
-sudo apt -q -y purge fonts-droid-fallback*
-sudo apt -q -y purge fonts-dejavu-core*
-sudo apt -q -y purge fonts-elementary-extra*
-sudo apt -q -y purge fonts-inter*
-sudo apt -q -y purge wine-development
-sudo apt -q -y purge catdoc
-sudo apt -q -y purge rygel
-sudo apt -q -y purge lintian
-sudo apt -q -y purge xterm
-sudo apt -q -y purge torbrowser-launcher
-sudo apt -q -y purge io.elementary.feedback*
-sudo apt -q -y purge doc-base
-sudo apt -q -y purge fig2dev
-sudo apt -q -y purge ufw*
-sudo apt -q -y purge torsocks
-sudo apt -q -y purge orca
-sudo apt -q -y purge cron
-sudo apt -q -y purge hunspell*
-sudo apt -q -y purge aspell*
-sudo apt -q -y purge language*
-sudo apt -q -y purge onboard
-sudo apt -q -y purge rsyslog
-sudo apt -q -y purge speech-dispatcher*
-sudo apt -q -y purge brltty
-sudo apt -q -y purge gsfonts
-sudo apt -q -y purge geoclue
-sudo apt -q -y purge opera-stable
-sudo apt -q -y purge odysseus*
-sudo apt -q -y purge chromium*
-sudo apt -q -y purge rtkit*
-sudo apt -q -y purge anacron*
-sudo apt -q -y purge cron*
-sudo apt -q -y purge xxd*
-sudo apt -q -y purge bleachbit*
-sudo apt -q -y purge pinta*
-sudo apt -q -y purge connectagram*
-sudo apt -q -y purge seamonkey-mozilla-build*
-sudo apt -q -y purge pidgin*
-sudo apt -q -y purge transmission*
-sudo apt -q -y purge linphone*
-sudo apt -q -y purge zaz*
-sudo apt -q -y purge vertris*
-sudo apt -q -y purge gnome-sudoku*
-sudo apt -q -y purge quarry*
-sudo apt -q -y purge gnome-mastermind*
-sudo apt -q -y purge gnome-mahjongg*
-sudo apt -q -y purge gweled*
-sudo apt -q -y purge eboard*
-sudo apt -q -y purge xpad*
-sudo apt -q -y purge homebank*
-sudo apt -q -y purge mpv
-sudo apt -q -y purge elementary-wallpapers*
-sudo apt -q -y purge io.elementary.initial-setup*
-#flatpak
+if [[ "$(read -e -p 'Вы точно хотите Очистить прочие пакеты ? [y/N] '; echo $REPLY)" == [Yy]* ]]
+then
+	echo "[Очистка прочего] => Процесс..."
+	sudo apt -q -y purge epiphany-*
+	sudo apt -q -y purge alsa-*
+	sudo apt -q -y purge webkitgtk-*
+	# (noto, roboto, exception)
+	sudo apt -q -y purge fonts-arphic*
+	sudo apt -q -y purge fonts-droid-fallback*
+	sudo apt -q -y purge fonts-dejavu-core*
+	sudo apt -q -y purge fonts-inter*
+	sudo apt -q -y purge wine-development
+	sudo apt -q -y purge apparmor
+	sudo apt -q -y purge catdoc
+	sudo apt -q -y purge rygel
+	sudo apt -q -y purge lintian
+	sudo apt -q -y purge xterm
+	sudo apt -q -y purge torbrowser-launcher
+	sudo apt -q -y purge io.elementary.feedback*
+	sudo apt -q -y purge doc-base
+	sudo apt -q -y purge fig2dev
+	sudo apt -q -y purge ufw*
+	sudo apt -q -y purge torsocks
+	sudo apt -q -y purge orca
+	sudo apt -q -y purge cron
+	sudo apt -q -y purge hunspell*
+	sudo apt -q -y purge aspell*
+	sudo apt -q -y purge language*
+	sudo apt -q -y purge onboard
+	sudo apt -q -y purge rsyslog
+	sudo apt -q -y purge speech-dispatcher*
+	sudo apt -q -y purge brltty
+	sudo apt -q -y purge gsfonts
+	sudo apt -q -y purge geoclue
+	sudo apt -q -y purge opera-stable
+	sudo apt -q -y purge odysseus*
+	sudo apt -q -y purge chromium*
+	sudo apt -q -y purge rtkit*
+	sudo apt -q -y purge anacron*
+	sudo apt -q -y purge cron*
+	sudo apt -q -y purge xxd*
+	sudo apt -q -y purge bleachbit*
+	sudo apt -q -y purge pinta*
+	sudo apt -q -y purge connectagram*
+	sudo apt -q -y purge seamonkey-mozilla-build*
+	sudo apt -q -y purge pidgin*
+	sudo apt -q -y purge transmission*
+	sudo apt -q -y purge linphone*
+	sudo apt -q -y purge zaz*
+	sudo apt -q -y purge vertris*
+	sudo apt -q -y purge gnome-sudoku*
+	sudo apt -q -y purge quarry*
+	sudo apt -q -y purge gnome-mastermind*
+	sudo apt -q -y purge gnome-mahjongg*
+	sudo apt -q -y purge gweled*
+	sudo apt -q -y purge eboard*
+	sudo apt -q -y purge xpad*
+	sudo apt -q -y purge homebank*
+	sudo apt -q -y purge mpv
+	sudo apt -q -y purge elementary-wallpapers*
+	sudo apt -q -y purge io.elementary.initial-setup*
+fi
+# flatpak
 flatpak uninstall org.gnome.Epiphany
 flatpak uninstall io.elementary.Platform.Locale
 flatpak uninstall io.elementary.calculator.Locale
@@ -253,6 +273,7 @@ sudo rm /usr/local/lib/node_modules/changelogs
 sudo rm /usr/local/lib/node_modules/docs
 sudo rm /usr/local/lib/node_modules/man
 echo "[Обновление прочего] => Успешно:)"
+
 #---------------------------------->Фикс прочего
 echo "[Очистка Фикс прочего] => Процесс..."
 #apache2
@@ -267,6 +288,7 @@ sudo chmod -R 0777 /etc/X11/
 sudo systemd-resolve --flush-caches
 sudo swapoff -a && sudo swapon -a
 echo "[Очистка Фикс прочего] => Успешно:)"
+
 #---------------------------------->Очистка локали
 echo "[Очистка локали] => Процесс..."
 sudo rm -Rf /var/lib/locales/supported.d/*
@@ -276,5 +298,10 @@ sudo sh -c "echo 'ru_RU.UTF-8 UTF-8' >> /etc/locale.gen"
 sudo sh -c "echo 'ja_JP.UTF-8 UTF-8' >> /etc/locale.gen"
 sudo locale-gen
 echo "[Очистка локали] => Успешно :)"
+
+#---------------------------------->Дефрагментация диска
+echo "[Дефрагментация диска] => Процесс..."
+sudo e4defrag ~/
+echo "[Дефрагментация диска] => Успешно :)"
 #----------------------------------
 echo "success ;)"
